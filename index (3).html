@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kauan Salles — TI & Desenvolvimento</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a0f;
+    --bg2: #080e15;
+    --surface: #0c1620;
+    --border: #0d2035;
+    --cyan: #00d4ff;
+    --cyan2: #00a8cc;
+    --green: #00ff88;
+    --orange: #ff6b2b;
+    --text: #c8dde8;
+    --text-dim: #4a6a7a;
+    --text-bright: #e8f4fa;
+    --glow: rgba(0, 212, 255, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--cyan);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.2s, height 0.2s;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(0,212,255,0.5);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease-out, width 0.2s, height 0.2s;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 10000;
+  }
+
+  /* GRID BACKGROUND */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 18px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(5,10,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: var(--cyan);
+    letter-spacing: 2px;
+  }
+  .nav-logo span { color: var(--green); }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 0; height: 1px;
+    background: var(--cyan);
+    transition: width 0.3s;
+  }
+  .nav-links a:hover { color: var(--cyan); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* SECTIONS */
+  section {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 120px 10% 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+    top: 10%; right: -100px;
+    pointer-events: none;
+    animation: pulse-glow 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+  }
+
+  .hero-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    animation: fade-up 0.6s ease forwards 0.3s;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--green);
+  }
+
+  .hero-name {
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 800;
+    line-height: 0.95;
+    color: var(--text-bright);
+    letter-spacing: -2px;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fade-up 0.6s ease forwards 0.5s;
+  }
+  .hero-name .accent { color: var(--cyan); }
+
+  .hero-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(14px, 2vw, 18px);
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fade-up 0.6s ease forwards 0.7s;
+  }
+
+  .hero-bio {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text);
+    max-width: 560px;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fade-up 0.6s ease forwards 0.9s;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fade-up 0.6s ease forwards 1.1s;
+  }
+
+  .btn-primary {
+    padding: 14px 32px;
+    background: var(--cyan);
+    color: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-primary:hover { background: var(--green); transform: translateY(-2px); }
+
+  .btn-outline {
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    transition: border-color 0.2s, color 0.2s, transform 0.2s;
+    cursor: pointer;
+  }
+  .btn-outline:hover { border-color: var(--cyan); color: var(--text-bright); transform: translateY(-2px); }
+
+  .hero-stats {
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    opacity: 0;
+    animation: fade-left 0.8s ease forwards 1.2s;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 28px;
+    text-align: center;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--cyan), transparent);
+  }
+  .stat-num {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--cyan);
+    line-height: 1;
+    font-family: 'Space Mono', monospace;
+  }
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-left {
+    from { opacity: 0; transform: translate(24px, -50%); }
+    to { opacity: 1; transform: translate(0, -50%); }
+  }
+
+  /* CONTACT BAR */
+  .contact-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 10%;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    transition: color 0.2s;
+  }
+  .contact-item:hover { color: var(--cyan); }
+  .contact-item .icon {
+    width: 28px; height: 28px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    padding: 0 10% 60px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .section-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+  .section-title {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 800;
+    color: var(--text-bright);
+    letter-spacing: -1px;
+  }
+  .section-title .accent { color: var(--cyan); }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* EXPERIENCE */
+  #experience {
+    padding: 100px 0 80px;
+  }
+
+  .exp-grid {
+    padding: 0 10%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .exp-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid transparent;
+    padding: 28px 36px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    transition: border-color 0.3s, background 0.3s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .exp-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0,212,255,0.03), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .exp-item:hover {
+    border-left-color: var(--cyan);
+    transform: translateX(4px);
+  }
+  .exp-item:hover::before { opacity: 1; }
+
+  .exp-item.management { --accent: var(--cyan); }
+  .exp-item.teaching { --accent: var(--green); }
+  .exp-item.dev { --accent: var(--orange); }
+  .exp-item.support { --accent: var(--cyan2); }
+  .exp-item:hover { border-left-color: var(--accent, var(--cyan)); }
+
+  .exp-role {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+  .exp-company {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .exp-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+  .exp-date {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    padding-top: 4px;
+  }
+  .exp-category {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+    margin-bottom: 16px;
+    color: var(--accent, var(--cyan));
+    border-color: var(--accent, var(--cyan));
+    opacity: 0.6;
+  }
+
+  /* SKILLS */
+  #skills {
+    padding: 100px 0 80px;
+    background: var(--bg2);
+  }
+
+  .skills-grid {
+    padding: 0 10%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2px;
+  }
+
+  .skill-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    position: relative;
+    transition: transform 0.2s;
+  }
+  .skill-group:hover { transform: translateY(-4px); }
+  .skill-group::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--group-color, var(--cyan)), transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .skill-group:hover::after { transform: scaleX(1); }
+
+  .skill-group-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--group-color, var(--cyan));
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .skill-group-title::before {
+    content: '//';
+    opacity: 0.5;
+  }
+
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .skill-tag {
+    padding: 6px 14px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .skill-tag:hover {
+    border-color: var(--group-color, var(--cyan));
+    color: var(--group-color, var(--cyan));
+  }
+
+  /* EDUCATION */
+  #education {
+    padding: 100px 0 80px;
+  }
+
+  .edu-grid {
+    padding: 0 10%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+  }
+
+  .edu-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .edu-card:hover { transform: translateY(-4px); }
+  .edu-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--cyan);
+  }
+  .edu-degree {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .edu-institution {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .edu-period {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* PROJECTS */
+  #projects {
+    padding: 100px 0 80px;
+    background: var(--bg2);
+  }
+
+  .projects-grid {
+    padding: 0 10%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2px;
+  }
+
+  .project-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    position: relative;
+    transition: border-color 0.3s, transform 0.2s;
+    overflow: hidden;
+  }
+  .project-card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -10px; right: 20px;
+    font-size: 80px;
+    font-weight: 800;
+    color: rgba(0,212,255,0.04);
+    font-family: 'Space Mono', monospace;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .project-card:hover {
+    border-color: var(--cyan);
+    transform: translateY(-4px);
+  }
+  .project-type {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .project-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-bottom: 12px;
+  }
+  .project-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  /* COURSES */
+  #courses {
+    padding: 100px 0 80px;
+  }
+
+  .courses-container {
+    padding: 0 10%;
+  }
+
+  .courses-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 2px;
+  }
+
+  .course-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+  .course-item:hover { border-color: var(--text-dim); }
+  .course-name {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .course-meta {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .course-hours {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    color: var(--cyan);
+    font-weight: 700;
+    display: block;
+  }
+  .course-year {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 48px 10%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    position: relative;
+    z-index: 1;
+    gap: 24px;
+  }
+  .footer-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-bright);
+  }
+  .footer-name span { color: var(--cyan); }
+  .footer-copy {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .footer-location {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .footer-location span { color: var(--green); }
+
+  /* DIVIDER */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 10%;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--cyan2); }
+
+  /* REVEAL ANIMATION */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* FLOATING SOCIAL */
+  .social-float {
+    position: fixed;
+    right: 24px;
+    bottom: 40px;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  .social-float::after {
+    content: '';
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, var(--border), transparent);
+    margin-top: 4px;
+  }
+
+  .social-btn {
+    width: 44px; height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    text-decoration: none;
+    font-size: 18px;
+    position: relative;
+    transition: border-color 0.25s, transform 0.25s, background 0.25s;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .social-btn:hover {
+    transform: translateX(-4px) scale(1.1);
+    background: var(--btn-color, var(--surface));
+    border-color: var(--btn-color, var(--cyan));
+  }
+  .social-btn .tooltip {
+    position: absolute;
+    right: 54px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .social-btn:hover .tooltip { opacity: 1; }
+
+  .social-btn.whatsapp { --btn-color: #25d366; }
+  .social-btn.email    { --btn-color: var(--cyan); }
+  .social-btn.insta    { --btn-color: #e1306c; }
+
+  /* CONTACT SECTION */
+  #contact {
+    padding: 100px 0 80px;
+    background: var(--bg2);
+  }
+
+  .contact-section-inner {
+    padding: 0 10%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    align-items: stretch;
+  }
+
+  .contact-info-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-info-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--green), transparent);
+  }
+  .contact-info-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-bright);
+    margin-bottom: 12px;
+  }
+  .contact-info-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 40px;
+    max-width: 340px;
+  }
+  .contact-links-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .contact-link-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: border-color 0.25s, transform 0.2s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  }
+  .contact-link-item:hover {
+    border-color: var(--link-color, var(--cyan));
+    transform: translateX(6px);
+  }
+  .contact-link-item.wa   { --link-color: #25d366; }
+  .contact-link-item.em   { --link-color: var(--cyan); }
+  .contact-link-item.ig   { --link-color: #e1306c; }
+
+  .cli-icon {
+    width: 40px; height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .cli-text { flex: 1; }
+  .cli-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .cli-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+  .cli-arrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    color: var(--link-color, var(--cyan));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .contact-link-item:hover .cli-arrow { opacity: 1; }
+
+  .contact-cta-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    position: relative;
+  }
+  .contact-cta-panel::before {
+    content: '> DISPONÍVEL\A> PARA NOVOS\A> PROJETOS';
+    white-space: pre;
+    position: absolute;
+    top: 32px; right: 32px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: rgba(0,212,255,0.08);
+    line-height: 2;
+    letter-spacing: 1px;
+    pointer-events: none;
+  }
+  .cta-big {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    color: var(--text-bright);
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+  .cta-big span { color: var(--cyan); }
+  .cta-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 320px;
+  }
+  .cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .cta-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 24px;
+    text-decoration: none;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    border: 1px solid var(--border);
+    transition: border-color 0.25s, transform 0.2s, background 0.25s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .cta-btn-icon { font-size: 20px; }
+  .cta-btn-info { flex: 1; }
+  .cta-btn-label { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; display: block; margin-bottom: 2px; }
+  .cta-btn-text { font-size: 14px; color: var(--text-bright); font-family: 'Syne', sans-serif; font-weight: 600; }
+
+  .cta-btn.wa-cta  { --btn-c: #25d366; }
+  .cta-btn.em-cta  { --btn-c: var(--cyan); }
+  .cta-btn.ig-cta  { --btn-c: #e1306c; }
+  .cta-btn:hover {
+    border-color: var(--btn-c, var(--cyan));
+    transform: translateX(4px);
+    background: rgba(255,255,255,0.02);
+  }
+  .cta-btn .arrow { color: var(--btn-c, var(--cyan)); font-size: 18px; opacity: 0.5; transition: opacity 0.2s, transform 0.2s; }
+  .cta-btn:hover .arrow { opacity: 1; transform: translateX(4px); }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    #hero { padding: 100px 24px 60px; }
+    .hero-stats { display: none; }
+    .section-header, .exp-grid, .skills-grid, .edu-grid,
+    .projects-grid, .courses-container { padding: 0 24px; }
+    .contact-bar { padding: 20px 24px; gap: 20px; }
+    footer { padding: 40px 24px; }
+    .exp-item { grid-template-columns: 1fr; }
+    .exp-date { display: none; }
+    body { cursor: auto; }
+    .cursor, .cursor-ring { display: none; }
+    .social-float { right: 12px; bottom: 24px; }
+    .social-btn { width: 38px; height: 38px; font-size: 16px; }
+    .contact-section-inner { grid-template-columns: 1fr; padding: 0 24px; }
+    .contact-info-panel, .contact-cta-panel { padding: 32px 24px; }
+    .cta-big { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="grid-bg"></div>
+
+<!-- FLOATING SOCIAL -->
+<div class="social-float">
+  <a href="https://wa.me/5588992661961" target="_blank" class="social-btn whatsapp">
+    <span class="tooltip">WhatsApp</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+  <a href="mailto:sallesdsgn736@gmail.com" class="social-btn email">
+    <span class="tooltip">E-mail</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+  </a>
+  <a href="https://instagram.com/kauansallesti" target="_blank" class="social-btn insta">
+    <span class="tooltip">@kauansallesti</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e1306c" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+  </a>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">KS<span>.</span>DEV</div>
+  <ul class="nav-links">
+    <li><a href="#experience">Experiência</a></li>
+    <li><a href="#skills">Habilidades</a></li>
+    <li><a href="#education">Formação</a></li>
+    <li><a href="#projects">Projetos</a></li>
+    <li><a href="#courses">Cursos</a></li>
+    <li><a href="#contact">Contato</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div>
+    <div class="hero-tag">Disponível para oportunidades</div>
+    <h1 class="hero-name">Francisco<br><span class="accent">Kauan</span><br>Salles</h1>
+    <p class="hero-title">Desenvolvedor · Instrutor · Gestor em TI</p>
+    <p class="hero-bio">
+      Profissional de TI com experiência em suporte técnico, desenvolvimento de software
+      e docência em informática. Fundador da Estação Digital, com foco em resultados,
+      otimização de processos e uso estratégico da tecnologia.
+    </p>
+    <div class="hero-cta">
+      <a href="https://wa.me/5588992661961?text=Ol%C3%A1%2C%20Kauan!%20Vi%20seu%20portf%C3%B3lio%20e%20gostaria%20de%20conversar." target="_blank" class="btn-primary">💬 WhatsApp</a>
+      <a href="mailto:sallesdsgn736@gmail.com" class="btn-outline">✉ E-mail</a>
+      <a href="https://instagram.com/kauansallesti" target="_blank" class="btn-outline" style="color:#e1306c;border-color:#e1306c33;">📸 Instagram</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-card">
+      <div class="stat-num">150+</div>
+      <div class="stat-label">Alunos formados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">5+</div>
+      <div class="stat-label">Anos de atuação</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">10+</div>
+      <div class="stat-label">Projetos entregues</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT BAR -->
+<div class="contact-bar">
+  <a href="https://wa.me/5588992661961" target="_blank" class="contact-item" style="text-decoration:none;">
+    <div class="icon">📱</div>
+    (88) 99266-1961
+  </a>
+  <a href="mailto:sallesdsgn736@gmail.com" class="contact-item" style="text-decoration:none;">
+    <div class="icon">✉️</div>
+    sallesdsgn736@gmail.com
+  </a>
+  <a href="https://instagram.com/kauansallesti" target="_blank" class="contact-item" style="text-decoration:none;">
+    <div class="icon">📸</div>
+    @kauansallesti
+  </a>
+  <div class="contact-item">
+    <div class="icon">🌎</div>
+    Brasil
+  </div>
+  <div class="contact-item">
+    <div class="icon">🎓</div>
+    Análise e Desenvolvimento de Sistemas
+  </div>
+</div>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="section-header reveal">
+    <span class="section-num">01.</span>
+    <h2 class="section-title">Experiência <span class="accent">Profissional</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="exp-grid">
+
+    <div class="exp-item management reveal">
+      <div>
+        <div class="exp-category" style="--accent: var(--cyan)">Gestão & Empreendedorismo</div>
+        <div class="exp-role">Fundador, Programador e Instrutor</div>
+        <div class="exp-company">// Estação Digital</div>
+        <p class="exp-desc">Gestão completa do negócio: organização operacional, atendimento ao cliente, planejamento de serviços e padronização de processos. Liderança nas atividades de manutenção, vendas e montagem de computadores. Criação e aplicação de cursos próprios de informática com mais de 50 alunos formados. Desenvolvimento de aplicações web com HTML, CSS, PHP e JavaScript.</p>
+      </div>
+      <div class="exp-date">Dez 2024 — Atual</div>
+    </div>
+
+    <div class="exp-item teaching reveal">
+      <div>
+        <div class="exp-category" style="--accent: var(--green)">Docência</div>
+        <div class="exp-role">Professor do Curso Técnico em Informática</div>
+        <div class="exp-company">// EEMTI Coelho Mascarenhas</div>
+        <p class="exp-desc">Aulas do curso técnico em informática para turma de 1º ano do Ensino Médio Integral, com 40 alunos. Município de Novo Oriente.</p>
+      </div>
+      <div class="exp-date">Ago 2025 — Dez 2025</div>
+    </div>
+
+    <div class="exp-item support reveal">
+      <div>
+        <div class="exp-category" style="--accent: var(--cyan2)">Suporte Técnico</div>
+        <div class="exp-role">Agente de Recursos Tecnológicos</div>
+        <div class="exp-company">// Secretaria de Educação</div>
+        <p class="exp-desc">Gestão e organização de toda a área tecnológica. Suporte técnico de computadores, impressoras e equipamentos. Implementação de soluções para otimização de processos administrativos — sistemas de automação para PDFs, DOCX, imagens e planilhas.</p>
+      </div>
+      <div class="exp-date">Jan 2023 — Jan 2026</div>
+    </div>
+
+    <div class="exp-item teaching reveal">
+      <div>
+        <div class="exp-category" style="--accent: var(--green)">Docência</div>
+        <div class="exp-role">Professor de Informática & Curso ABNT</div>
+        <div class="exp-company">// Centro Espaço Aprendiz</div>
+        <p class="exp-desc">Aulas de informática básica e avançada com mais de 100 alunos formados. Curso de 120h sobre normas ABNT e ferramentas digitais.</p>
+      </div>
+      <div class="exp-date">Mar 2023 — Mar 2025</div>
+    </div>
+
+    <div class="exp-item support reveal">
+      <div>
+        <div class="exp-category" style="--accent: var(--cyan2)">Suporte Técnico</div>
+        <div class="exp-role">Suporte Técnico em Informática</div>
+        <div class="exp-company">// GF Serviços</div>
+        <p class="exp-desc">Atendimento técnico terceirizado para o município de Novo Oriente. Manutenções de hardware, software e redes.</p>
+      </div>
+      <div class="exp-date">Jan 2021 — Dez 2023</div>
+    </div>
+
+    <div class="exp-item support reveal">
+      <div>
+        <div class="exp-category" style="--accent: var(--cyan2)">Operações</div>
+        <div class="exp-role">Operador de Computador</div>
+        <div class="exp-company">// Creche Maria José B. Melo</div>
+        <p class="exp-desc">Auxílio em demandas de informática, planilhas, documentos, painéis, atividades pedagógicas e artes gráficas.</p>
+      </div>
+      <div class="exp-date">Jan 2022 — Jan 2023</div>
+    </div>
+
+    <div class="exp-item dev reveal">
+      <div>
+        <div class="exp-category" style="--accent: var(--orange)">Desenvolvimento</div>
+        <div class="exp-role">Programador</div>
+        <div class="exp-company">// LS Soluções</div>
+        <p class="exp-desc">Desenvolvimento de softwares de gestão comercial em C# com banco de dados MySQL e PostgreSQL. Aprimoramento de funções e criação de novas implementações.</p>
+      </div>
+      <div class="exp-date">Dez 2020 — Mar 2021</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="section-header reveal">
+    <span class="section-num">02.</span>
+    <h2 class="section-title">Habilidades <span class="accent">Técnicas</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="skills-grid">
+
+    <div class="skill-group reveal" style="--group-color: var(--orange)">
+      <div class="skill-group-title" style="color: var(--orange)">Linguagens & Back-end</div>
+      <div class="skill-tags">
+        <span class="skill-tag">C#</span>
+        <span class="skill-tag">PHP</span>
+        <span class="skill-tag">JavaScript</span>
+        <span class="skill-tag">MySQL</span>
+        <span class="skill-tag">PostgreSQL</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal" style="--group-color: var(--cyan)">
+      <div class="skill-group-title">Desenvolvimento Web</div>
+      <div class="skill-tags">
+        <span class="skill-tag">HTML5</span>
+        <span class="skill-tag">CSS3</span>
+        <span class="skill-tag">JavaScript</span>
+        <span class="skill-tag">PHP</span>
+        <span class="skill-tag">Sistemas Responsivos</span>
+        <span class="skill-tag">Landing Pages</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal" style="--group-color: var(--green)">
+      <div class="skill-group-title" style="color: var(--green)">Infraestrutura & Suporte</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Hardware</span>
+        <span class="skill-tag">Software</span>
+        <span class="skill-tag">Redes</span>
+        <span class="skill-tag">Montagem de PCs</span>
+        <span class="skill-tag">Impressoras</span>
+        <span class="skill-tag">Manutenção</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal" style="--group-color: var(--cyan2)">
+      <div class="skill-group-title" style="color: var(--cyan2)">Automação & IA</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Automação de Tarefas</span>
+        <span class="skill-tag">PDF / DOCX</span>
+        <span class="skill-tag">Ferramentas de IA</span>
+        <span class="skill-tag">Geração de Relatórios</span>
+        <span class="skill-tag">Tratamento de Imagens</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal">
+      <div class="skill-group-title">Ferramentas & Design</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Word</span>
+        <span class="skill-tag">Excel</span>
+        <span class="skill-tag">PowerPoint</span>
+        <span class="skill-tag">Canva</span>
+        <span class="skill-tag">CorelDRAW</span>
+        <span class="skill-tag">Photoshop</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal" style="--group-color: var(--orange)">
+      <div class="skill-group-title" style="color: var(--orange)">Gestão & Educação</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Gestão de Equipes</span>
+        <span class="skill-tag">Didática</span>
+        <span class="skill-tag">Liderança</span>
+        <span class="skill-tag">Planejamento</span>
+        <span class="skill-tag">Atendimento</span>
+        <span class="skill-tag">Empreendedorismo</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- EDUCATION -->
+<section id="education">
+  <div class="section-header reveal">
+    <span class="section-num">03.</span>
+    <h2 class="section-title">Formação <span class="accent">Acadêmica</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="edu-grid">
+
+    <div class="edu-card reveal">
+      <div class="edu-degree">Análise e Desenvolvimento de Sistemas</div>
+      <div class="edu-institution">// Universidade Estácio de Sá</div>
+      <div class="edu-period">2021 — 2023</div>
+    </div>
+
+    <div class="edu-card reveal">
+      <div class="edu-degree">Licenciatura em Computação</div>
+      <div class="edu-institution">// Universidade Estácio de Sá</div>
+      <div class="edu-period">Em andamento — Previsão 2028</div>
+    </div>
+
+    <div class="edu-card reveal">
+      <div class="edu-degree">Curso Profissionalizante em Informática</div>
+      <div class="edu-institution">// EEEP Maria Eudes Bezerra Veras</div>
+      <div class="edu-period">2018 — 2020</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-header reveal">
+    <span class="section-num">04.</span>
+    <h2 class="section-title">Projetos <span class="accent">Relevantes</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="projects-grid">
+
+    <div class="project-card reveal" data-num="01">
+      <div class="project-type">Automação</div>
+      <div class="project-name">Conversor de PDF</div>
+      <p class="project-desc">Ferramenta para converter e organizar documentos de forma rápida, com foco em produtividade pessoal e fluxos de trabalho.</p>
+    </div>
+
+    <div class="project-card reveal" data-num="02">
+      <div class="project-type">Sistema Comercial</div>
+      <div class="project-name">Sistema de PDV</div>
+      <p class="project-desc">Sistema próprio de Ponto de Venda para controle de vendas e estoque, desenvolvido do zero.</p>
+    </div>
+
+    <div class="project-card reveal" data-num="03">
+      <div class="project-type">Web</div>
+      <div class="project-name">Landing Pages Institucionais</div>
+      <p class="project-desc">Criação de páginas web para divulgação de cursos e serviços da Estação Digital e outros clientes.</p>
+    </div>
+
+    <div class="project-card reveal" data-num="04">
+      <div class="project-type">Educacional</div>
+      <div class="project-name">Jogos Interativos para Aula</div>
+      <p class="project-desc">Jogos educativos que reforçam conceitos de informática e raciocínio lógico, usados em sala de aula.</p>
+    </div>
+
+    <div class="project-card reveal" data-num="05">
+      <div class="project-type">Educacional</div>
+      <div class="project-name">Linhas do Tempo Interativas</div>
+      <p class="project-desc">Sistemas web para construção de linhas do tempo dinâmicas, facilitando aprendizagem de conteúdos históricos.</p>
+    </div>
+
+    <div class="project-card reveal" data-num="06">
+      <div class="project-type">Docência</div>
+      <div class="project-name">Apostilas Completas de TI</div>
+      <p class="project-desc">6 módulos de Informática Essencial e apostila completa de Normas ABNT (120h), usados em cursos próprios.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- COURSES -->
+<section id="courses">
+  <div class="section-header reveal">
+    <span class="section-num">05.</span>
+    <h2 class="section-title">Cursos & <span class="accent">Certificações</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="courses-container">
+    <div class="courses-list">
+
+      <div class="course-item reveal">
+        <span class="course-name">Informática — Sóeducador/Famec</span>
+        <div class="course-meta"><span class="course-hours">250h</span><span class="course-year">2024</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Assistente de Secretaria Escolar — IFRS</span>
+        <div class="course-meta"><span class="course-hours">200h</span><span class="course-year">2024</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Aperfeiçoamento em Educação e Tecnologia — AVAMEC</span>
+        <div class="course-meta"><span class="course-hours">180h</span><span class="course-year">2024</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Informática / Microsoft Office — Udemy</span>
+        <div class="course-meta"><span class="course-hours">130h</span><span class="course-year">2023</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Microsoft Excel 2016 — Fundação Bradesco</span>
+        <div class="course-meta"><span class="course-hours">65h</span><span class="course-year">2023</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Curso Técnico em Informática — ABELINE</span>
+        <div class="course-meta"><span class="course-hours">60h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Manutenção de Computadores — Mundi</span>
+        <div class="course-meta"><span class="course-hours">60h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Operador de Computador — UP Cursos</span>
+        <div class="course-meta"><span class="course-hours">40h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Inclusão Social Digital — Mundi</span>
+        <div class="course-meta"><span class="course-hours">40h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Educação através da Internet — Mundi</span>
+        <div class="course-meta"><span class="course-hours">40h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Informática Completa — BRASTEC</span>
+        <div class="course-meta"><span class="course-hours">40h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Fundamentos em Computação — IFRS</span>
+        <div class="course-meta"><span class="course-hours">25h</span><span class="course-year">2024</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Gestão Financeira — Mundi</span>
+        <div class="course-meta"><span class="course-hours">30h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Empreendedorismo — Mundi</span>
+        <div class="course-meta"><span class="course-hours">20h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Tecnologia e Competências Digitais — Nova Escola</span>
+        <div class="course-meta"><span class="course-hours">30h</span><span class="course-year">2025</span></div>
+      </div>
+      <div class="course-item reveal">
+        <span class="course-name">Pensamento Computacional — Fundação Bradesco</span>
+        <div class="course-meta"><span class="course-hours">6h</span><span class="course-year">2025</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-header reveal">
+    <span class="section-num">06.</span>
+    <h2 class="section-title">Vamos <span class="accent">Conversar?</span></h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="contact-section-inner">
+
+    <div class="contact-info-panel reveal">
+      <div class="contact-info-title">Entre em contato</div>
+      <p class="contact-info-sub">Aberto a oportunidades em desenvolvimento, suporte, docência e gestão em TI. Respondo pelo WhatsApp, e-mail ou Instagram.</p>
+      <div class="contact-links-list">
+
+        <a href="https://wa.me/5588992661961" target="_blank" class="contact-link-item wa">
+          <div class="cli-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </div>
+          <div class="cli-text">
+            <span class="cli-label">WhatsApp</span>
+            <span class="cli-value">(88) 99266-1961</span>
+          </div>
+          <span class="cli-arrow">→</span>
+        </a>
+
+        <a href="mailto:sallesdsgn736@gmail.com" class="contact-link-item em">
+          <div class="cli-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="cli-text">
+            <span class="cli-label">E-mail</span>
+            <span class="cli-value">sallesdsgn736@gmail.com</span>
+          </div>
+          <span class="cli-arrow">→</span>
+        </a>
+
+        <a href="https://instagram.com/kauansallesti" target="_blank" class="contact-link-item ig">
+          <div class="cli-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e1306c" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </div>
+          <div class="cli-text">
+            <span class="cli-label">Instagram</span>
+            <span class="cli-value">@kauansallesti</span>
+          </div>
+          <span class="cli-arrow">→</span>
+        </a>
+
+      </div>
+    </div>
+
+    <div class="contact-cta-panel reveal">
+      <div class="cta-big">Pronto para<br><span>o próximo</span><br>desafio.</div>
+      <p class="cta-sub">Seja para desenvolver um sistema, ministrar um curso, estruturar sua TI ou integrar um time — estou disponível para conversar.</p>
+      <div class="cta-buttons">
+        <a href="https://wa.me/5588992661961?text=Ol%C3%A1%2C%20Kauan!%20Vi%20seu%20portf%C3%B3lio%20e%20gostaria%20de%20conversar." target="_blank" class="cta-btn wa-cta">
+          <span class="cta-btn-icon">💬</span>
+          <div class="cta-btn-info">
+            <span class="cta-btn-label">Mensagem rápida</span>
+            <span class="cta-btn-text">Chamar no WhatsApp</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+        <a href="mailto:sallesdsgn736@gmail.com?subject=Oportunidade%20de%20trabalho&body=Ol%C3%A1%2C%20Kauan!" class="cta-btn em-cta">
+          <span class="cta-btn-icon">📧</span>
+          <div class="cta-btn-info">
+            <span class="cta-btn-label">Enviar e-mail</span>
+            <span class="cta-btn-text">sallesdsgn736@gmail.com</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+        <a href="https://instagram.com/kauansallesti" target="_blank" class="cta-btn ig-cta">
+          <span class="cta-btn-icon">📸</span>
+          <div class="cta-btn-info">
+            <span class="cta-btn-label">Instagram</span>
+            <span class="cta-btn-text">@kauansallesti</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-name">Kauan <span>Salles</span></div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">Desenvolvedor · Instrutor · Gestor em TI</div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;">
+    <a href="https://wa.me/5588992661961" target="_blank" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface);text-decoration:none;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#25d366'" onmouseout="this.style.borderColor='var(--border)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
+    <a href="mailto:sallesdsgn736@gmail.com" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface);text-decoration:none;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--cyan)'" onmouseout="this.style.borderColor='var(--border)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    </a>
+    <a href="https://instagram.com/kauansallesti" target="_blank" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--surface);text-decoration:none;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#e1306c'" onmouseout="this.style.borderColor='var(--border)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e1306c" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+    </a>
+  </div>
+  <div class="footer-location">📍 <span>Brasil</span></div>
+  <div class="footer-copy">© 2025 — Todos os direitos reservados</div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button, .exp-item, .skill-group, .edu-card, .project-card, .course-item').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '20px';
+      cursor.style.height = '20px';
+      ring.style.width = '56px';
+      ring.style.height = '56px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '12px';
+      cursor.style.height = '12px';
+      ring.style.width = '36px';
+      ring.style.height = '36px';
+    });
+  });
+
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => observer.observe(el));
+
+  // Staggered reveal for grid items
+  document.querySelectorAll('.skills-grid .skill-group, .edu-grid .edu-card, .projects-grid .project-card, .courses-list .course-item').forEach((el, i) => {
+    el.style.transitionDelay = (i % 4) * 0.08 + 's';
+  });
+</script>
+</body>
+</html>
